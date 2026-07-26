@@ -1,5 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "cleanUrls": false
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/taskpane.html"
+    }
+  ]
 }
