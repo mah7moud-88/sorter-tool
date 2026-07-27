@@ -1,220 +1,147 @@
 /* global Excel */
 
-
 export async function sortExcelAccounts(
     correctColumn,
     accountColumn,
-    valueColumn,
-    outputAccount = "D",
-    outputValue = "E"
+    valueColumn
 ) {
 
-
     await Excel.run(async (context) => {
-
 
         const sheet =
             context.workbook.worksheets.getActiveWorksheet();
 
 
-
-        // قراءة العناوين
-
-        const headerRange =
-            sheet.getRange(
-                `${valueColumn}1`
-            );
-
-
-        headerRange.load("values");
-
-
-        await context.sync();
-
-
-
-        // وضع عنوان القيمة في E1
-
-        const outputHeader =
-            sheet.getRange(
-                `${outputValue}1`
-            );
-
-
-        outputHeader.values = [
-            [
-                headerRange.values[0][0]
-            ]
-        ];
-
-
-
-
-
-        // قراءة البيانات بداية من الصف الثاني
-
         const correctRange =
             sheet.getRange(
-                `${correctColumn}2:${correctColumn}1000`
+                `${correctColumn}1:${correctColumn}1000`
             );
 
 
         const accountRange =
             sheet.getRange(
-                `${accountColumn}2:${accountColumn}1000`
+                `${accountColumn}1:${accountColumn}1000`
             );
 
 
         const valueRange =
             sheet.getRange(
-                `${valueColumn}2:${valueColumn}1000`
+                `${valueColumn}1:${valueColumn}1000`
             );
 
 
-
         correctRange.load("values");
-
         accountRange.load("values");
-
         valueRange.load("values");
-
 
 
         await context.sync();
 
 
 
-
-
+        // تجاهل أول صف (عنوان رقم الحساب)
         const correctAccounts =
             correctRange.values
-            .flat()
-            .filter(
-                x => x !== "" && x !== null
-            )
-            .map(
-                x => String(x).trim()
-            );
-
+                .flat()
+                .slice(1)
+                .filter(x => x !== "" && x !== null)
+                .map(String);
 
 
 
         const accounts =
             accountRange.values
-            .flat()
-            .filter(
-                x => x !== "" && x !== null
-            )
-            .map(
-                x => String(x).trim()
-            );
-
+                .flat()
+                .filter(x => x !== "" && x !== null)
+                .map(String);
 
 
 
         const values =
             valueRange.values
-            .flat();
+                .flat();
 
 
-
-
-
-
-
-        // ربط الحساب بالقيمة
 
         const accountMap = {};
 
 
-
         accounts.forEach((account, index) => {
-
 
             accountMap[account] =
                 values[index];
 
-
         });
 
 
 
+        const output = [];
 
-
-
-
-
-        const resultAccounts = [];
-
-        const resultValues = [];
-
-
-
-
-
-        // ترتيب الحسابات حسب العمود المرجعي
 
         correctAccounts.forEach(account => {
 
+            output.push([
 
+                account,
 
-            resultAccounts.push([
-                account
-            ]);
-
-
-
-            resultValues.push([
                 accountMap[account] ?? ""
+
             ]);
-
-
 
         });
 
 
 
+        // تنظيف النتائج القديمة فقط بداية من الصف الثاني
+        // حتى لا يتم مسح العناوين في D1 و E1 و F1
+        sheet.getRange("D2:F1000")
+            .clear(Excel.ClearApplyTo.contents);
 
 
 
-
-
-        // كتابة الحسابات في D من الصف الثاني
-
-        const accountOutputRange =
+        // كتابة النتائج في D و E بداية من الصف الثاني
+        const resultRange =
             sheet.getRange(
-                `${outputAccount}2:${outputAccount}${resultAccounts.length + 1}`
+                `D2:E${output.length + 1}`
             );
 
 
-        accountOutputRange.values =
-            resultAccounts;
+        resultRange.values = output;
 
 
 
+        // وضع معادلة المقارنة في F بداية من الصف الثاني
+        const formulas = [];
+
+
+        for (let i = 0; i < output.length; i++) {
+
+            const row = i + 2;
+
+
+            formulas.push([
+
+                `=IF(A${row}=D${row},TRUE,FALSE)`
+
+            ]);
+
+        }
 
 
 
-        // كتابة القيم في E من الصف الثاني
-
-        const valueOutputRange =
+        const fRange =
             sheet.getRange(
-                `${outputValue}2:${outputValue}${resultValues.length + 1}`
+                `F2:F${formulas.length + 1}`
             );
 
 
-        valueOutputRange.values =
-            resultValues;
-
-
+        fRange.formulas = formulas;
 
 
 
         await context.sync();
 
 
-
     });
-
 
 }
