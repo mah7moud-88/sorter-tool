@@ -36,11 +36,13 @@ Office.onReady((info) => {
                     document.getElementById("valueColumn").value;
 
 
+
                 await sortExcelAccounts(
                     correctColumn,
                     accountColumn,
                     valueColumn
                 );
+
 
 
                 status.innerText =
@@ -63,18 +65,51 @@ Office.onReady((info) => {
 
 
 
+        // تحميل الشيتات والأعمدة عند فتح الإضافة
         loadSheets();
 
         loadExcelData();
 
 
 
+        // تحديث الأعمدة عند اختيار شيت آخر
         document
         .getElementById("sheetSelect")
         .addEventListener(
             "change",
-            loadSheets
+            () => {
+
+                loadExcelData();
+
+            }
         );
+
+
+
+        // متابعة إضافة أو حذف الشيتات
+        Excel.run(async (context) => {
+
+
+            context.workbook.worksheets.onAdded.add(() => {
+
+                loadSheets();
+
+            });
+
+
+
+            context.workbook.worksheets.onDeleted.add(() => {
+
+                loadSheets();
+
+            });
+
+
+
+            await context.sync();
+
+
+        });
 
 
     }
@@ -125,18 +160,42 @@ async function loadSheets(){
                     document.createElement("option");
 
 
+
                 option.text =
                     sheet.name;
+
 
 
                 option.value =
                     sheet.name;
 
 
+
                 sheetSelect.appendChild(option);
 
 
+
             });
+
+
+
+            // تحديد الشيت الحالي
+            const activeSheet =
+                context.workbook
+                .worksheets
+                .getActiveWorksheet();
+
+
+            activeSheet.load("name");
+
+
+            await context.sync();
+
+
+
+            sheetSelect.value =
+                activeSheet.name;
+
 
 
         });
@@ -151,6 +210,8 @@ async function loadSheets(){
     }
 
 }
+
+
 
 
 
@@ -180,7 +241,9 @@ async function loadExcelData(){
                 sheet.getUsedRange();
 
 
+
             range.load("values");
+
 
 
             await context.sync();
@@ -192,7 +255,7 @@ async function loadExcelData(){
 
 
 
-            if(!data || data.length===0)
+            if(!data || data.length === 0)
                 return;
 
 
@@ -200,6 +263,7 @@ async function loadExcelData(){
             fillColumnLists(
                 data[0]
             );
+
 
 
         });
@@ -213,6 +277,7 @@ async function loadExcelData(){
         console.error(error);
 
 
+
         document.getElementById("status").innerText =
         "❌ خطأ في قراءة البيانات";
 
@@ -220,6 +285,8 @@ async function loadExcelData(){
     }
 
 }
+
+
 
 
 
@@ -245,7 +312,7 @@ function fillColumnLists(columns){
 
 
 
-        select.innerHTML="";
+        select.innerHTML = "";
 
 
 
@@ -268,12 +335,14 @@ function fillColumnLists(columns){
                 `${letter} - ${column || "عمود"}`;
 
 
+
             option.value =
                 letter;
 
 
 
             select.appendChild(option);
+
 
 
         });
