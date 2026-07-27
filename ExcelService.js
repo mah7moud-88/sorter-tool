@@ -1,7 +1,11 @@
 /* global Excel */
 
 
-export async function sortExcelAccounts() {
+export async function sortExcelAccounts(
+    correctColumn,
+    accountColumn,
+    valueColumn
+) {
 
 
     await Excel.run(async (context) => {
@@ -13,15 +17,21 @@ export async function sortExcelAccounts() {
 
 
         const correctRange =
-            sheet.getRange("A1:A1000");
+            sheet.getRange(
+                `${correctColumn}1:${correctColumn}1000`
+            );
 
 
         const accountRange =
-            sheet.getRange("B1:B1000");
+            sheet.getRange(
+                `${accountColumn}1:${accountColumn}1000`
+            );
 
 
         const valueRange =
-            sheet.getRange("C1:C1000");
+            sheet.getRange(
+                `${valueColumn}1:${valueColumn}1000`
+            );
 
 
 
@@ -37,25 +47,34 @@ export async function sortExcelAccounts() {
 
 
 
+
         const correctAccounts =
             correctRange.values
-                .flat()
-                .filter(x => x !== "" && x !== null)
-                .map(String);
+            .flat()
+            .filter(
+                x => x !== "" && x !== null
+            )
+            .map(String);
+
 
 
 
         const accounts =
             accountRange.values
-                .flat()
-                .filter(x => x !== "" && x !== null)
-                .map(String);
+            .flat()
+            .filter(
+                x => x !== "" && x !== null
+            )
+            .map(String);
+
 
 
 
         const values =
             valueRange.values
-                .flat();
+            .flat();
+
+
 
 
 
@@ -63,7 +82,7 @@ export async function sortExcelAccounts() {
 
 
 
-        accounts.forEach((account, index) => {
+        accounts.forEach((account,index)=>{
 
 
             accountMap[account] =
@@ -74,16 +93,22 @@ export async function sortExcelAccounts() {
 
 
 
+
+
+
         const output = [];
 
 
 
-        correctAccounts.forEach(account => {
+        correctAccounts.forEach(account=>{
 
 
             output.push([
+
                 account,
+
                 accountMap[account] ?? ""
+
             ]);
 
 
@@ -91,6 +116,11 @@ export async function sortExcelAccounts() {
 
 
 
+
+
+
+
+        // الناتج يبدأ من العمود التالي بعد الأعمدة المستخدمة
         const resultRange =
             sheet.getRange(
                 `D1:E${output.length}`
@@ -104,6 +134,7 @@ export async function sortExcelAccounts() {
 
 
         await context.sync();
+
 
 
     });

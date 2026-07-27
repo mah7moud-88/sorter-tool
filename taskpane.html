@@ -3,17 +3,19 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <title>
-        Account Sorter Pro
-    </title>
-
-
-    <link rel="stylesheet" href="taskpane.css">
+<title>
+Account Sorter Pro
+</title>
 
 
-    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<link rel="stylesheet" href="taskpane.css">
+
+
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+<script type="module" src="taskpane.js"></script>
 
 
 </head>
@@ -25,228 +27,167 @@
 <div class="container">
 
 
-    <!-- Header -->
+<div class="header">
 
-    <div class="header">
+<div class="brand">
 
+<h1>
+Account Sorter Pro
+</h1>
 
-        <div class="brand">
+<span>
+Smart Account Matching
+</span>
 
-            <h1>
-                Account Sorter Pro
-            </h1>
+</div>
 
-            <span>
-                Smart Account Matching
-            </span>
 
-        </div>
+<div class="logo">
+📊
+</div>
 
+</div>
 
-        <div class="logo">
-            📊
-        </div>
 
 
-    </div>
+<div class="card">
 
+<div class="card-title">
+📁 ملف العمل
+</div>
 
 
+<label>
+الشيت الحالي
+</label>
 
 
-    <!-- اختيار الشيت -->
-
-
-    <div class="card">
-
-
-        <div class="card-title">
-
-            📁 ملف العمل
-
-        </div>
-
-
-
-        <label>
-            الشيت الحالي
-        </label>
-
-
-        <select id="sheetSelect" class="input-box">
-
-        </select>
-
-
-    </div>
-
-
-
-
-
-    <!-- الأعمدة -->
-
-
-    <div class="card">
-
-
-        <div class="card-title">
-
-            🔗 ربط الأعمدة
-
-        </div>
-
-
-
-        <label>
-            الحساب المرجعي
-        </label>
-
-
-        <select id="correctColumn" class="input-box">
-
-        </select>
-
-
-
-
-
-        <label>
-            الحساب المراد ترتيبه
-        </label>
-
-
-        <select id="accountColumn" class="input-box">
-
-        </select>
-
-
-
-
-
-        <label>
-            القيمة المرتبطة
-        </label>
-
-
-        <select id="valueColumn" class="input-box">
-
-        </select>
-
-
-
-    </div>
-
-
-
-
-
-
-
-    <!-- الناتج -->
-
-
-    <div class="card">
-
-
-        <div class="card-title">
-
-            ⚙ إعدادات الناتج
-
-        </div>
-
-
-
-        <label>
-            عمود الحسابات الناتجة
-        </label>
-
-
-        <select id="outputAccount" class="input-box">
-
-            <option value="D">
-                D
-            </option>
-
-            <option value="E">
-                E
-            </option>
-
-            <option value="F">
-                F
-            </option>
-
-        </select>
-
-
-
-
-
-        <label>
-            عمود القيم الناتجة
-        </label>
-
-
-        <select id="outputValue" class="input-box">
-
-            <option value="E">
-                E
-            </option>
-
-            <option value="F">
-                F
-            </option>
-
-            <option value="G">
-                G
-            </option>
-
-        </select>
-
-
-
-    </div>
-
-
-
-
-
-
-    <button id="sortButton">
-
-        ▶ بدء الترتيب
-
-    </button>
-
-
-
-
-
-    <div class="result">
-
-
-        <div class="card-title">
-
-            📌 النتيجة
-
-        </div>
-
-
-        <div id="status">
-
-            جاهز للعمل
-
-        </div>
-
-
-    </div>
-
-
-
+<select id="sheetSelect" class="input-box"></select>
 
 
 </div>
 
+
+
+
+
+<div class="card">
+
+
+<div class="card-title">
+🔗 ربط الأعمدة
+</div>
+
+
+<label>
+الحساب المرجعي
+</label>
+
+<select id="correctColumn" class="input-box"></select>
+
+
+
+<label>
+الحساب المراد ترتيبه
+</label>
+
+<select id="accountColumn" class="input-box"></select>
+
+
+
+<label>
+القيمة المرتبطة
+</label>
+
+<select id="valueColumn" class="input-box"></select>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+
+<div class="card-title">
+⚙ إعدادات الناتج
+</div>
+
+
+
+<label>
+عمود الحسابات الناتجة
+</label>
+
+
+<select id="outputAccount" class="input-box">
+
+<option value="D">D</option>
+<option value="E">E</option>
+<option value="F">F</option>
+<option value="G">G</option>
+
+</select>
+
+
+
+
+
+<label>
+عمود القيم الناتجة
+</label>
+
+
+<select id="outputValue" class="input-box">
+
+<option value="E">E</option>
+<option value="F">F</option>
+<option value="G">G</option>
+<option value="H">H</option>
+
+</select>
+
+
+</div>
+
+
+
+
+
+
+<button id="sortButton">
+
+▶ بدء الترتيب
+
+</button>
+
+
+
+
+
+<div class="result">
+
+
+<div class="card-title">
+📌 النتيجة
+</div>
+
+
+<div id="status">
+
+جاهز للعمل
+
+</div>
+
+
+</div>
+
+
+
+</div>
 
 
 </body>

@@ -1,54 +1,85 @@
 /* global Excel, Office, document */
 
-
-import { sortExcelAccounts } from "./ExcelService";
-
-
-
+import { sortExcelAccounts } from "./ExcelService.js";
 
 
 Office.onReady((info) => {
 
-
-
     if (info.host === Office.HostType.Excel) {
 
 
+        const button =
+            document.getElementById("sortButton");
 
-        document
-            .getElementById("sortButton")
-            .onclick = sortExcelAccounts;
 
+        button.onclick = async () => {
+
+            const status =
+                document.getElementById("status");
+
+
+            try {
+
+                status.innerText =
+                    "⏳ جاري الترتيب...";
+
+
+                const correctColumn =
+                    document.getElementById("correctColumn").value;
+
+
+                const accountColumn =
+                    document.getElementById("accountColumn").value;
+
+
+                const valueColumn =
+                    document.getElementById("valueColumn").value;
+
+
+                await sortExcelAccounts(
+                    correctColumn,
+                    accountColumn,
+                    valueColumn
+                );
+
+
+                status.innerText =
+                    "✅ تم الترتيب بنجاح";
+
+
+            }
+
+            catch(error){
+
+                console.error(error);
+
+
+                status.innerText =
+                    "❌ " + error.message;
+
+            }
+
+        };
 
 
 
         loadSheets();
 
-
-
         loadExcelData();
 
 
 
-
         document
-            .getElementById("sheetSelect")
-            .addEventListener(
-                "click",
-                loadSheets
-            );
-
+        .getElementById("sheetSelect")
+        .addEventListener(
+            "change",
+            loadSheets
+        );
 
 
     }
 
-
-
 });
-
-
-
-
 
 
 
@@ -58,41 +89,28 @@ Office.onReady((info) => {
 // تحميل أسماء الشيتات
 // ===============================
 
-
-async function loadSheets() {
-
+async function loadSheets(){
 
 
     try {
 
 
-
-        await Excel.run(async (context) => {
-
+        await Excel.run(async(context)=>{
 
 
             const sheets =
                 context.workbook.worksheets;
 
 
-
-            sheets.load(
-                "items/name"
-            );
-
+            sheets.load("items/name");
 
 
             await context.sync();
 
 
 
-
-
-
             const sheetSelect =
-                document.getElementById(
-                    "sheetSelect"
-                );
+                document.getElementById("sheetSelect");
 
 
 
@@ -100,58 +118,37 @@ async function loadSheets() {
 
 
 
-
-
-
-            sheets.items.forEach((item) => {
-
+            sheets.items.forEach(sheet=>{
 
 
                 const option =
-                    document.createElement(
-                        "option"
-                    );
-
+                    document.createElement("option");
 
 
                 option.text =
-                    item.name;
-
+                    sheet.name;
 
 
                 option.value =
-                    item.name;
+                    sheet.name;
 
 
-
-                sheetSelect.appendChild(
-                    option
-                );
-
+                sheetSelect.appendChild(option);
 
 
             });
 
 
-
-
         });
-
 
 
     }
 
     catch(error){
 
-
-
         console.error(error);
 
-
-
     }
-
-
 
 }
 
@@ -159,25 +156,17 @@ async function loadSheets() {
 
 
 
-
-
-
-
 // ===============================
-// تحميل بيانات الشيت والأعمدة
+// تحميل الأعمدة
 // ===============================
 
-
-async function loadExcelData() {
-
+async function loadExcelData(){
 
 
-    try {
-
+    try{
 
 
         await Excel.run(async(context)=>{
-
 
 
             const sheet =
@@ -187,92 +176,48 @@ async function loadExcelData() {
 
 
 
-
-
-            const usedRange =
+            const range =
                 sheet.getUsedRange();
 
 
-
-
-            usedRange.load(
-                "values"
-            );
-
+            range.load("values");
 
 
             await context.sync();
 
 
 
-
-
-
             const data =
-                usedRange.values;
+                range.values;
 
 
 
-
-            if(!data || data.length === 0){
-
-
+            if(!data || data.length===0)
                 return;
-
-
-            }
-
-
-
-
-
-
-            const columns =
-                data[0];
-
-
-
-            console.log(
-                "Columns:",
-                columns
-            );
-
-
 
 
 
             fillColumnLists(
-                columns
+                data[0]
             );
-
-
 
 
         });
 
 
-
     }
 
-
     catch(error){
-
 
 
         console.error(error);
 
 
-
-        document.getElementById(
-            "status"
-        ).innerText =
-        "❌ خطأ في قراءة الأعمدة";
-
+        document.getElementById("status").innerText =
+        "❌ خطأ في قراءة البيانات";
 
 
     }
-
-
 
 }
 
@@ -280,71 +225,35 @@ async function loadExcelData() {
 
 
 
-
-
-
-
 // ===============================
-// تعبئة قوائم الأعمدة
+// تعبئة الأعمدة
 // ===============================
-
 
 function fillColumnLists(columns){
 
 
-
-    const selects = [
-
-
-
+    [
         "correctColumn",
-
         "accountColumn",
-
         "valueColumn"
 
-
-
-    ];
-
-
-
-
-
-    selects.forEach((id)=>{
-
+    ].forEach(id=>{
 
 
         const select =
-            document.getElementById(
-                id
-            );
+            document.getElementById(id);
 
 
 
-        if(!select){
-
-            return;
-
-        }
-
-
-
-        select.innerHTML = "";
-
-
-
+        select.innerHTML="";
 
 
 
         columns.forEach((column,index)=>{
 
 
-
             const option =
-                document.createElement(
-                    "option"
-                );
+                document.createElement("option");
 
 
 
@@ -359,24 +268,18 @@ function fillColumnLists(columns){
                 `${letter} - ${column || "عمود"}`;
 
 
-
             option.value =
                 letter;
 
 
 
-            select.appendChild(
-                option
-            );
-
+            select.appendChild(option);
 
 
         });
 
 
-
     });
-
 
 
 }
