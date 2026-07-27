@@ -4,7 +4,9 @@
 export async function sortExcelAccounts(
     correctColumn,
     accountColumn,
-    valueColumn
+    valueColumn,
+    outputAccount = "D",
+    outputValue = "E"
 ) {
 
 
@@ -16,21 +18,56 @@ export async function sortExcelAccounts(
 
 
 
+        // قراءة العناوين
+
+        const headerRange =
+            sheet.getRange(
+                `${valueColumn}1`
+            );
+
+
+        headerRange.load("values");
+
+
+        await context.sync();
+
+
+
+        // وضع عنوان القيمة في E1
+
+        const outputHeader =
+            sheet.getRange(
+                `${outputValue}1`
+            );
+
+
+        outputHeader.values = [
+            [
+                headerRange.values[0][0]
+            ]
+        ];
+
+
+
+
+
+        // قراءة البيانات بداية من الصف الثاني
+
         const correctRange =
             sheet.getRange(
-                `${correctColumn}1:${correctColumn}1000`
+                `${correctColumn}2:${correctColumn}1000`
             );
 
 
         const accountRange =
             sheet.getRange(
-                `${accountColumn}1:${accountColumn}1000`
+                `${accountColumn}2:${accountColumn}1000`
             );
 
 
         const valueRange =
             sheet.getRange(
-                `${valueColumn}1:${valueColumn}1000`
+                `${valueColumn}2:${valueColumn}1000`
             );
 
 
@@ -48,13 +85,16 @@ export async function sortExcelAccounts(
 
 
 
+
         const correctAccounts =
             correctRange.values
             .flat()
             .filter(
                 x => x !== "" && x !== null
             )
-            .map(String);
+            .map(
+                x => String(x).trim()
+            );
 
 
 
@@ -65,7 +105,9 @@ export async function sortExcelAccounts(
             .filter(
                 x => x !== "" && x !== null
             )
-            .map(String);
+            .map(
+                x => String(x).trim()
+            );
 
 
 
@@ -78,11 +120,15 @@ export async function sortExcelAccounts(
 
 
 
+
+
+        // ربط الحساب بالقيمة
+
         const accountMap = {};
 
 
 
-        accounts.forEach((account,index)=>{
+        accounts.forEach((account, index) => {
 
 
             accountMap[account] =
@@ -96,20 +142,32 @@ export async function sortExcelAccounts(
 
 
 
-        const output = [];
+
+
+        const resultAccounts = [];
+
+        const resultValues = [];
 
 
 
-        correctAccounts.forEach(account=>{
 
 
-            output.push([
+        // ترتيب الحسابات حسب العمود المرجعي
 
-                account,
+        correctAccounts.forEach(account => {
 
-                accountMap[account] ?? ""
 
+
+            resultAccounts.push([
+                account
             ]);
+
+
+
+            resultValues.push([
+                accountMap[account] ?? ""
+            ]);
+
 
 
         });
@@ -120,16 +178,35 @@ export async function sortExcelAccounts(
 
 
 
-        // الناتج يبدأ من العمود التالي بعد الأعمدة المستخدمة
-        const resultRange =
+
+        // كتابة الحسابات في D من الصف الثاني
+
+        const accountOutputRange =
             sheet.getRange(
-                `D1:E${output.length}`
+                `${outputAccount}2:${outputAccount}${resultAccounts.length + 1}`
             );
 
 
+        accountOutputRange.values =
+            resultAccounts;
 
-        resultRange.values =
-            output;
+
+
+
+
+
+        // كتابة القيم في E من الصف الثاني
+
+        const valueOutputRange =
+            sheet.getRange(
+                `${outputValue}2:${outputValue}${resultValues.length + 1}`
+            );
+
+
+        valueOutputRange.values =
+            resultValues;
+
+
 
 
 
