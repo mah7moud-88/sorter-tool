@@ -27,26 +27,27 @@ export async function sortExcelAccounts(
 
         await context.sync();
 
-        // قراءة الحسابات الصحيحة (بدون العنوان)
+        // قراءة الحسابات الصحيحة
         const correctAccounts = [];
 
         for (let i = 1; i < correctRange.values.length; i++) {
             const account = correctRange.values[i][0];
 
             if (account !== "" && account !== null) {
-                correctAccounts.push(String(account));
+                correctAccounts.push(String(account).trim());
             }
         }
 
-        // إنشاء خريطة: رقم الحساب -> القيمة
-        const accountMap = {};
+        // إنشاء Map للحسابات والقيم
+        const accountMap = new Map();
 
         for (let i = 1; i < accountRange.values.length; i++) {
-            const account = accountRange.values[i][0];
+
+            const account = String(accountRange.values[i][0] ?? "").trim();
             const value = valueRange.values[i][0];
 
-            if (account !== "" && account !== null) {
-                accountMap[String(account)] = value;
+            if (account !== "") {
+                accountMap.set(account, value);
             }
         }
 
@@ -54,10 +55,11 @@ export async function sortExcelAccounts(
         const output = [];
 
         for (const account of correctAccounts) {
+
             output.push([
                 account,
-                accountMap.hasOwnProperty(account)
-                    ? accountMap[account]
+                accountMap.has(account)
+                    ? accountMap.get(account)
                     : ""
             ]);
         }
@@ -68,27 +70,27 @@ export async function sortExcelAccounts(
 
         // كتابة النتائج
         if (output.length > 0) {
+
             const resultRange = sheet.getRange(
                 `D2:E${output.length + 1}`
             );
 
             resultRange.values = output;
-        }
 
-        // كتابة معادلات المقارنة
-        const formulas = [];
+            // معادلات المقارنة
+            const formulas = [];
 
-        for (let i = 0; i < output.length; i++) {
-            const row = i + 2;
+            for (let i = 0; i < output.length; i++) {
 
-            formulas.push([
-                `=IF(A${row}=D${row},TRUE,FALSE)`
-            ]);
-        }
+                const row = i + 2;
 
-        if (formulas.length > 0) {
+                formulas.push([
+                    `=A${row}=D${row}`
+                ]);
+            }
+
             const fRange = sheet.getRange(
-                `F2:F${formulas.length + 1}`
+                `F2:F${output.length + 1}`
             );
 
             fRange.formulas = formulas;
