@@ -21,52 +21,76 @@ export async function sortExcelAccounts(
             `${valueColumn}1:${valueColumn}1000`
         );
 
-        correctRange.load("values");
-        accountRange.load("values");
+
+        // الحسابات نقرأها حسب الشكل الظاهر
+        correctRange.load("text");
+
+        accountRange.load("text");
+
+        // القيم نقرأها كقيم فعلية
         valueRange.load("values");
+
 
         await context.sync();
 
-        // قراءة الحسابات الصحيحة
+
+        // قراءة الحسابات الصحيحة (بدون العنوان)
         const correctAccounts = [];
 
-        for (let i = 1; i < correctRange.values.length; i++) {
-            const account = correctRange.values[i][0];
+        for (let i = 1; i < correctRange.text.length; i++) {
 
-            if (account !== "" && account !== null) {
-                correctAccounts.push(String(account).trim());
-            }
-        }
-
-        // إنشاء Map للحسابات والقيم
-        const accountMap = new Map();
-
-        for (let i = 1; i < accountRange.values.length; i++) {
-
-            const account = String(accountRange.values[i][0] ?? "").trim();
-            const value = valueRange.values[i][0];
+            const account = correctRange.text[i][0].trim();
 
             if (account !== "") {
-                accountMap.set(account, value);
+                correctAccounts.push(account);
             }
         }
+
+
+        // إنشاء خريطة الحساب -> القيمة
+        const accountMap = new Map();
+
+
+        for (let i = 1; i < accountRange.text.length; i++) {
+
+            const account = accountRange.text[i][0].trim();
+
+            const value = valueRange.values[i][0];
+
+
+            if (account !== "") {
+
+                accountMap.set(account, value);
+
+            }
+        }
+
 
         // تجهيز النتائج
         const output = [];
 
+
         for (const account of correctAccounts) {
 
             output.push([
+
                 account,
+
                 accountMap.has(account)
                     ? accountMap.get(account)
                     : ""
+
             ]);
+
         }
+
+
 
         // تنظيف النتائج القديمة
         sheet.getRange("D2:F1000")
             .clear(Excel.ClearApplyTo.contents);
+
+
 
         // كتابة النتائج
         if (output.length > 0) {
@@ -77,25 +101,31 @@ export async function sortExcelAccounts(
 
             resultRange.values = output;
 
-            // معادلات المقارنة
+
+            // معادلة المقارنة
             const formulas = [];
+
 
             for (let i = 0; i < output.length; i++) {
 
                 const row = i + 2;
 
                 formulas.push([
-                    `=A${row}=D${row}`
+                    `=IF(A${row}=D${row},TRUE,FALSE)`
                 ]);
             }
 
+
             const fRange = sheet.getRange(
-                `F2:F${output.length + 1}`
+                `F2:F${formulas.length + 1}`
             );
 
             fRange.formulas = formulas;
+
         }
 
+
         await context.sync();
+
     });
 }
