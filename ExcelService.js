@@ -5,143 +5,95 @@ export async function sortExcelAccounts(
     accountColumn,
     valueColumn
 ) {
-
     await Excel.run(async (context) => {
 
-        const sheet =
-            context.workbook.worksheets.getActiveWorksheet();
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
 
+        const correctRange = sheet.getRange(
+            `${correctColumn}1:${correctColumn}1000`
+        );
 
-        const correctRange =
-            sheet.getRange(
-                `${correctColumn}1:${correctColumn}1000`
-            );
+        const accountRange = sheet.getRange(
+            `${accountColumn}1:${accountColumn}1000`
+        );
 
-
-        const accountRange =
-            sheet.getRange(
-                `${accountColumn}1:${accountColumn}1000`
-            );
-
-
-        const valueRange =
-            sheet.getRange(
-                `${valueColumn}1:${valueColumn}1000`
-            );
-
+        const valueRange = sheet.getRange(
+            `${valueColumn}1:${valueColumn}1000`
+        );
 
         correctRange.load("values");
         accountRange.load("values");
         valueRange.load("values");
 
-
         await context.sync();
 
+        // قراءة الحسابات الصحيحة (بدون العنوان)
+        const correctAccounts = [];
 
+        for (let i = 1; i < correctRange.values.length; i++) {
+            const account = correctRange.values[i][0];
 
-        // تجاهل أول صف (عنوان رقم الحساب)
-        const correctAccounts =
-            correctRange.values
-                .flat()
-                .slice(1)
-                .filter(x => x !== "" && x !== null)
-                .map(String);
+            if (account !== "" && account !== null) {
+                correctAccounts.push(String(account));
+            }
+        }
 
-
-
-        const accounts =
-            accountRange.values
-                .flat()
-                .filter(x => x !== "" && x !== null)
-                .map(String);
-
-
-
-        const values =
-            valueRange.values
-                .flat();
-
-
-
+        // إنشاء خريطة: رقم الحساب -> القيمة
         const accountMap = {};
 
+        for (let i = 1; i < accountRange.values.length; i++) {
+            const account = accountRange.values[i][0];
+            const value = valueRange.values[i][0];
 
-        accounts.forEach((account, index) => {
+            if (account !== "" && account !== null) {
+                accountMap[String(account)] = value;
+            }
+        }
 
-            accountMap[account] =
-                values[index];
-
-        });
-
-
-
+        // تجهيز النتائج
         const output = [];
 
-
-        correctAccounts.forEach(account => {
-
+        for (const account of correctAccounts) {
             output.push([
-
                 account,
-
-                accountMap[account] ?? ""
-
+                accountMap.hasOwnProperty(account)
+                    ? accountMap[account]
+                    : ""
             ]);
+        }
 
-        });
-
-
-
-        // تنظيف النتائج القديمة فقط بداية من الصف الثاني
-        // حتى لا يتم مسح العناوين في D1 و E1 و F1
+        // تنظيف النتائج القديمة
         sheet.getRange("D2:F1000")
             .clear(Excel.ClearApplyTo.contents);
 
-
-
-        // كتابة النتائج في D و E بداية من الصف الثاني
-        const resultRange =
-            sheet.getRange(
+        // كتابة النتائج
+        if (output.length > 0) {
+            const resultRange = sheet.getRange(
                 `D2:E${output.length + 1}`
             );
 
-
-        resultRange.values = output;
-
-
-
-        // وضع معادلة المقارنة في F بداية من الصف الثاني
-        const formulas = [];
-
-
-        for (let i = 0; i < output.length; i++) {
-
-            const row = i + 2;
-
-
-            formulas.push([
-
-                `=IF(A${row}=D${row},TRUE,FALSE)`
-
-            ]);
-
+            resultRange.values = output;
         }
 
+        // كتابة معادلات المقارنة
+        const formulas = [];
 
+        for (let i = 0; i < output.length; i++) {
+            const row = i + 2;
 
-        const fRange =
-            sheet.getRange(
+            formulas.push([
+                `=IF(A${row}=D${row},TRUE,FALSE)`
+            ]);
+        }
+
+        if (formulas.length > 0) {
+            const fRange = sheet.getRange(
                 `F2:F${formulas.length + 1}`
             );
 
-
-        fRange.formulas = formulas;
-
-
+            fRange.formulas = formulas;
+        }
 
         await context.sync();
-
-
     });
-
 }
