@@ -21,111 +21,79 @@ export async function sortExcelAccounts(
             `${valueColumn}1:${valueColumn}1000`
         );
 
-
-        // الحسابات نقرأها حسب الشكل الظاهر
-        correctRange.load("text");
-
-        accountRange.load("text");
-
-        // القيم نقرأها كقيم فعلية
+        correctRange.load("values");
+        accountRange.load("values");
         valueRange.load("values");
-
 
         await context.sync();
 
-
-        // قراءة الحسابات الصحيحة (بدون العنوان)
+        // قراءة الحسابات الصحيحة
         const correctAccounts = [];
 
-        for (let i = 1; i < correctRange.text.length; i++) {
-
-            const account = correctRange.text[i][0].trim();
+        for (let i = 1; i < correctRange.values.length; i++) {
+            const account = String(correctRange.values[i][0] ?? "").trim();
 
             if (account !== "") {
                 correctAccounts.push(account);
             }
         }
 
-
-        // إنشاء خريطة الحساب -> القيمة
+        // إنشاء خريطة: رقم الحساب -> القيمة
         const accountMap = new Map();
 
-
-        for (let i = 1; i < accountRange.text.length; i++) {
-
-            const account = accountRange.text[i][0].trim();
-
+        for (let i = 1; i < accountRange.values.length; i++) {
+            const account = String(accountRange.values[i][0] ?? "").trim();
             const value = valueRange.values[i][0];
 
-
             if (account !== "") {
-
                 accountMap.set(account, value);
-
             }
         }
-
 
         // تجهيز النتائج
         const output = [];
 
-
         for (const account of correctAccounts) {
-
             output.push([
-
                 account,
-
                 accountMap.has(account)
                     ? accountMap.get(account)
                     : ""
-
             ]);
-
         }
-
-
 
         // تنظيف النتائج القديمة
         sheet.getRange("D2:F1000")
             .clear(Excel.ClearApplyTo.contents);
 
-
-
         // كتابة النتائج
         if (output.length > 0) {
-
             const resultRange = sheet.getRange(
                 `D2:E${output.length + 1}`
             );
 
             resultRange.values = output;
+        }
 
-
-            // معادلة المقارنة
+        // كتابة معادلات المقارنة
+        if (output.length > 0) {
             const formulas = [];
 
-
             for (let i = 0; i < output.length; i++) {
-
                 const row = i + 2;
 
                 formulas.push([
-                    `=IF(A${row}=D${row},TRUE,FALSE)`
+                    `=A${row}=D${row}`
                 ]);
             }
 
-
-            const fRange = sheet.getRange(
-                `F2:F${formulas.length + 1}`
+            const formulaRange = sheet.getRange(
+                `F2:F${output.length + 1}`
             );
 
-            fRange.formulas = formulas;
-
+            formulaRange.formulas = formulas;
         }
 
-
         await context.sync();
-
     });
 }
