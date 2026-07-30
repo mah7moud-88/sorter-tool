@@ -9,20 +9,15 @@ export async function sortExcelAccounts(
 
         const sheet = context.workbook.worksheets.getActiveWorksheet();
 
-        const correctRange = sheet.getRange(
-            `${correctColumn}1:${correctColumn}1000`
-        );
+        const correctRange = sheet.getRange(`${correctColumn}1:${correctColumn}1000`);
+        const accountRange = sheet.getRange(`${accountColumn}1:${accountColumn}1000`);
+        const valueRange = sheet.getRange(`${valueColumn}1:${valueColumn}1000`);
 
-        const accountRange = sheet.getRange(
-            `${accountColumn}1:${accountColumn}1000`
-        );
+        // اقرأ الحسابات كنص للحفاظ على الصفر الأول
+        correctRange.load("text");
+        accountRange.load("text");
 
-        const valueRange = sheet.getRange(
-            `${valueColumn}1:${valueColumn}1000`
-        );
-
-        correctRange.load("values");
-        accountRange.load("values");
+        // اقرأ القيم كالمعتاد
         valueRange.load("values");
 
         await context.sync();
@@ -30,8 +25,8 @@ export async function sortExcelAccounts(
         // قراءة الحسابات الصحيحة
         const correctAccounts = [];
 
-        for (let i = 1; i < correctRange.values.length; i++) {
-            const account = String(correctRange.values[i][0] ?? "").trim();
+        for (let i = 1; i < correctRange.text.length; i++) {
+            const account = (correctRange.text[i][0] || "").trim();
 
             if (account !== "") {
                 correctAccounts.push(account);
@@ -41,8 +36,8 @@ export async function sortExcelAccounts(
         // إنشاء خريطة: رقم الحساب -> القيمة
         const accountMap = new Map();
 
-        for (let i = 1; i < accountRange.values.length; i++) {
-            const account = String(accountRange.values[i][0] ?? "").trim();
+        for (let i = 1; i < accountRange.text.length; i++) {
+            const account = (accountRange.text[i][0] || "").trim();
             const value = valueRange.values[i][0];
 
             if (account !== "") {
@@ -56,42 +51,34 @@ export async function sortExcelAccounts(
         for (const account of correctAccounts) {
             output.push([
                 account,
-                accountMap.has(account)
-                    ? accountMap.get(account)
-                    : ""
+                accountMap.get(account) ?? ""
             ]);
         }
 
         // تنظيف النتائج القديمة
-        sheet.getRange("D2:F1000")
-            .clear(Excel.ClearApplyTo.contents);
+        sheet.getRange("D2:F1000").clear(Excel.ClearApplyTo.contents);
 
         // كتابة النتائج
         if (output.length > 0) {
-            const resultRange = sheet.getRange(
-                `D2:E${output.length + 1}`
-            );
 
+            const resultRange = sheet.getRange(`D2:E${output.length + 1}`);
             resultRange.values = output;
+
+            // جعل عمود الحساب Text حتى لا يحذف الصفر الأول
+            sheet.getRange(`D2:D${output.length + 1}`).numberFormat = [["@"]];
         }
 
         // كتابة معادلات المقارنة
         if (output.length > 0) {
+
             const formulas = [];
 
             for (let i = 0; i < output.length; i++) {
                 const row = i + 2;
-
-                formulas.push([
-                    `=A${row}=D${row}`
-                ]);
+                formulas.push([`=A${row}=D${row}`]);
             }
 
-            const formulaRange = sheet.getRange(
-                `F2:F${output.length + 1}`
-            );
-
-            formulaRange.formulas = formulas;
+            sheet.getRange(`F2:F${output.length + 1}`).formulas = formulas;
         }
 
         await context.sync();
