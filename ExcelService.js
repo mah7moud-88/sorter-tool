@@ -136,7 +136,7 @@ export async function sortExcelAccounts(
                 const row = i + 2;
 
                 formulas.push([
-                    `=A${row}=D${row}`
+                    `=TRIM(${correctColumn}${row}&"")=TRIM(D${row}&"")`
                 ]);
             }
 
