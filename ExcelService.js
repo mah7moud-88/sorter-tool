@@ -39,11 +39,11 @@ export async function sortExcelAccounts(
             `${valueColumn}1:${valueColumn}${lastRow}`
         );
 
-        // الحسابات كنص للحفاظ على الصفر الأول
+        // قراءة الحسابات كنص للحفاظ على الشكل الظاهر
         correctRange.load("text");
         accountRange.load("text");
 
-        // القيم كما هي
+        // القيم الفعلية
         valueRange.load("values");
 
         await context.sync();
@@ -111,21 +111,11 @@ export async function sortExcelAccounts(
                 `D2:E${output.length + 1}`
             );
 
-            // نخلي عمود الحساب Text قبل الكتابة
-            const accountOutputRange = sheet.getRange(
-                `D2:D${output.length + 1}`
-            );
-
-            accountOutputRange.numberFormat = [["@"]];
-
             resultRange.values = output;
-
-            // تأكيد أن عمود الحساب Text
-            accountOutputRange.numberFormat = [["@"]];
         }
 
         // ============================================
-        // كتابة معادلات المقارنة
+        // كتابة معادلات التحقق
         // ============================================
         if (output.length > 0) {
 
@@ -135,8 +125,10 @@ export async function sortExcelAccounts(
 
                 const row = i + 2;
 
+                // مقارنة القيمة الفعلية
+                // وليس الشكل الناتج من Custom Number Format
                 formulas.push([
-                    `=TRIM(${correctColumn}${row}&"")=TRIM(D${row}&"")`
+                    `=${correctColumn}${row}=D${row}`
                 ]);
             }
 
