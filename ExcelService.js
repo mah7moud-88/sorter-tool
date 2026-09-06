@@ -10,7 +10,7 @@ export async function sortExcelAccounts(
         const sheet = context.workbook.worksheets.getActiveWorksheet();
 
         // ============================================
-        // تحديد آخر صف مستخدم في الشيت تلقائيًا
+        // تحديد آخر صف مستخدم
         // ============================================
         const usedRange = sheet.getUsedRange();
         usedRange.load("rowCount");
@@ -19,13 +19,12 @@ export async function sortExcelAccounts(
 
         const lastRow = usedRange.rowCount;
 
-        // لو الشيت فاضي تقريبًا
         if (lastRow < 1) {
             return;
         }
 
         // ============================================
-        // قراءة الأعمدة المطلوبة حتى آخر صف مستخدم
+        // قراءة الأعمدة
         // ============================================
         const correctRange = sheet.getRange(
             `${correctColumn}1:${correctColumn}${lastRow}`
@@ -39,23 +38,22 @@ export async function sortExcelAccounts(
             `${valueColumn}1:${valueColumn}${lastRow}`
         );
 
-        // قراءة الحسابات كنص للحفاظ على الشكل الظاهر
         correctRange.load("text");
         accountRange.load("text");
-
-        // القيم الفعلية
         valueRange.load("values");
 
         await context.sync();
 
         // ============================================
-        // قراءة الحسابات الصحيحة
+        // الحسابات الصحيحة
         // ============================================
         const correctAccounts = [];
 
         for (let i = 1; i < correctRange.text.length; i++) {
 
-            const account = (correctRange.text[i][0] || "").trim();
+            const account = String(
+                correctRange.text[i][0] || ""
+            ).trim();
 
             if (account !== "") {
                 correctAccounts.push(account);
@@ -63,14 +61,16 @@ export async function sortExcelAccounts(
         }
 
         // ============================================
-        // إنشاء Map:
-        // رقم الحساب -> القيمة
+        // Map للحسابات والقيم
         // ============================================
         const accountMap = new Map();
 
         for (let i = 1; i < accountRange.text.length; i++) {
 
-            const account = (accountRange.text[i][0] || "").trim();
+            const account = String(
+                accountRange.text[i][0] || ""
+            ).trim();
+
             const value = valueRange.values[i][0];
 
             if (account !== "") {
@@ -96,14 +96,17 @@ export async function sortExcelAccounts(
         // ============================================
         // تنظيف النتائج القديمة
         // ============================================
-        const outputRange = sheet.getRange(
-            `D2:F${Math.max(lastRow, correctAccounts.length + 1)}`
+        const clearEndRow = Math.max(
+            lastRow,
+            correctAccounts.length + 1
         );
 
-        outputRange.clear(Excel.ClearApplyTo.contents);
+        sheet.getRange(
+            `D2:F${clearEndRow}`
+        ).clear(Excel.ClearApplyTo.contents);
 
         // ============================================
-        // كتابة النتائج
+        // كتابة الحسابات والقيم
         // ============================================
         if (output.length > 0) {
 
@@ -115,7 +118,7 @@ export async function sortExcelAccounts(
         }
 
         // ============================================
-        // كتابة معادلات التحقق
+        // التحقق
         // ============================================
         if (output.length > 0) {
 
@@ -125,10 +128,17 @@ export async function sortExcelAccounts(
 
                 const row = i + 2;
 
-                // مقارنة القيمة الفعلية
-                // وليس الشكل الناتج من Custom Number Format
+                /*
+                 * نقارن الحساب الصحيح في نفس الصف
+                 * مع الحساب الذي تم وضعه في D.
+                 *
+                 * CLEAN  : إزالة الأحرف غير المرئية
+                 * TRIM   : إزالة المسافات الزائدة
+                 * EXACT  : مقارنة النص حرفيًا
+                 */
+
                 formulas.push([
-                    `=${correctColumn}${row}=D${row}`
+                    `=EXACT(TRIM(CLEAN(${correctColumn}${row}&"")),TRIM(CLEAN(D${row}&"")))`
                 ]);
             }
 
