@@ -24,7 +24,7 @@ export async function sortExcelAccounts(
         }
 
         // ============================================
-        // قراءة الأعمدة
+        // قراءة الأعمدة المطلوبة
         // ============================================
         const correctRange = sheet.getRange(
             `${correctColumn}1:${correctColumn}${lastRow}`
@@ -45,7 +45,7 @@ export async function sortExcelAccounts(
         await context.sync();
 
         // ============================================
-        // الحسابات الصحيحة
+        // قراءة الحسابات الصحيحة
         // ============================================
         const correctAccounts = [];
 
@@ -61,7 +61,8 @@ export async function sortExcelAccounts(
         }
 
         // ============================================
-        // Map للحسابات والقيم
+        // إنشاء Map
+        // الحساب -> القيمة
         // ============================================
         const accountMap = new Map();
 
@@ -106,7 +107,7 @@ export async function sortExcelAccounts(
         ).clear(Excel.ClearApplyTo.contents);
 
         // ============================================
-        // كتابة الحسابات والقيم
+        // كتابة النتائج
         // ============================================
         if (output.length > 0) {
 
@@ -129,16 +130,17 @@ export async function sortExcelAccounts(
                 const row = i + 2;
 
                 /*
-                 * نقارن الحساب الصحيح في نفس الصف
-                 * مع الحساب الذي تم وضعه في D.
+                 * VALUE يحول:
                  *
-                 * CLEAN  : إزالة الأحرف غير المرئية
-                 * TRIM   : إزالة المسافات الزائدة
-                 * EXACT  : مقارنة النص حرفيًا
+                 * 001234 -> 1234
+                 * 000123 -> 123
+                 * 1234   -> 1234
+                 *
+                 * وبالتالي الأصفار الأولى لا تؤثر على المقارنة.
                  */
 
                 formulas.push([
-                    `=EXACT(TRIM(CLEAN(${correctColumn}${row}&"")),TRIM(CLEAN(D${row}&"")))`
+                    `=IF(OR(${correctColumn}${row}="",D${row}=""),FALSE,IFERROR(VALUE(${correctColumn}${row})=VALUE(D${row}),FALSE))`
                 ]);
             }
 
